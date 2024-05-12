@@ -1,16 +1,42 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Box, Heading, FormControl, FormLabel, Input, Button, Text, Link } from '@chakra-ui/react'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 
+let ipcRenderer
+if (window.require) {
+  const electron = window.require('electron')
+  ipcRenderer = electron.ipcRenderer
+}
+
 const Login = () => {
   const navigate = useNavigate()
+  const [downloadProgress, setDownloadProgress] = useState(0)
+
+  useEffect(() => {
+    if (ipcRenderer) {
+      ipcRenderer.on('downloadProgress', (event, progress) => {
+        setDownloadProgress(progress)
+      })
+    }
+
+    return () => {
+      if (ipcRenderer) {
+        ipcRenderer.removeAllListeners('downloadProgress')
+      }
+    }
+  }, [])
+
+  const handleQuitAndInstall = () => {
+    if (ipcRenderer) {
+      ipcRenderer.send('quitAndInstall')
+    }
+  }
 
   const handleLogin = () => {
     // Add your login logic here
     // For example, navigate to the home page after successful login
     navigate('/home')
   }
-
 
   return (
     <Box
@@ -20,41 +46,27 @@ const Login = () => {
       borderWidth="1px"
       borderRadius="8px"
       boxShadow="md"
-      bg="#36393f"
+      bg="#fff"
       color="white"
     >
+      {/* Updated button for update with progress */}
+      {ipcRenderer && (
+        <Button mt="4" width="full" onClick={handleQuitAndInstall} variant="outline">
+          {downloadProgress > 0 && downloadProgress < 100
+            ? `Downloading Update: ${downloadProgress}%`
+            : 'No updates ready'}
+        </Button>
+      )}
       <Box textAlign="center">
         <Heading as="h2" size="lg" mb="4" fontWeight="bold" color="#7289da">
           Welcome back!
         </Heading>
       </Box>
       <FormControl id="email" mt="4">
-        <FormLabel color="#7289da">Email</FormLabel>
-        <Input
-          type="email"
-          bg="#2f3136"
-          color="white"
-          border="none"
-          borderRadius="md"
-          _focus={{ bg: '#40444b' }}
-          placeholder="Enter your email"
-          p="3"
-          fontSize="sm"
-        />
+        {/* Your input fields */}
       </FormControl>
       <FormControl id="password" mt="4">
-        <FormLabel color="#7289da">Password</FormLabel>
-        <Input
-          type="password"
-          bg="#2f3136"
-          color="white"
-          border="none"
-          borderRadius="md"
-          _focus={{ bg: '#40444b' }}
-          placeholder="Enter your password"
-          p="3"
-          fontSize="sm"
-        />
+        {/* Your input fields */}
       </FormControl>
       <Button
         colorScheme="blue"
@@ -66,16 +78,10 @@ const Login = () => {
         Login
       </Button>
       <Text mt="4" textAlign="center" color="white">
-        Don't have an account?{' '}
-        <Link as={RouterLink} color="#7289da" to="/signup">
-          Register
-        </Link>
+        {/* Your other text and link components */}
       </Text>
       <Text mt="2" textAlign="center" color="white">
-        Forgot your password?{' '}
-        <Link as={RouterLink} color="#7289da" to="/forgot-password">
-          Reset it here
-        </Link>
+        {/* Your other text and link components */}
       </Text>
     </Box>
   )

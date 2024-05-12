@@ -9,8 +9,8 @@ function AppRouter() {
     <Router
       main={
         <>
-          <Route path="/" element={<Login />} />a
-          <Route path="/search" element={<Home />} />
+          <Route path="/" element={<Login />} />
+          {/* <Route path="/search" element={<Home />} /> */}
         </>
       }
     />

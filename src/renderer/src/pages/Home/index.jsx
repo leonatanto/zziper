@@ -3,6 +3,13 @@ import { Box, Heading, Text, Button } from '@chakra-ui/react'
 import { Link as RouterLink } from 'react-router-dom'
 import axios from 'axios'
 
+// Conditionally import ipcRenderer for Electron environment
+let ipcRenderer
+if (window.require) {
+  const electron = window.require('electron')
+  ipcRenderer = electron.ipcRenderer
+}
+
 const Home = () => {
   const [posts, setPosts] = useState([])
 
@@ -15,7 +22,29 @@ const Home = () => {
       .catch((error) => {
         console.error('Error:', error)
       })
+
+    // Listen for updateReady event and update button text
+    if (ipcRenderer) {
+      ipcRenderer.on('updateReady', () => {
+        const container = document.getElementById('ready')
+        container.innerHTML = 'New version ready!'
+      })
+    }
+
+    // Cleanup listener when component unmounts
+    return () => {
+      if (ipcRenderer) {
+        ipcRenderer.removeAllListeners('updateReady')
+      }
+    }
   }, [])
+
+  // Function to send quitAndInstall message to Electron main process
+  const handleQuitAndInstall = () => {
+    if (ipcRenderer) {
+      ipcRenderer.send('quitAndInstall')
+    }
+  }
 
   return (
     <Box
@@ -41,6 +70,13 @@ const Home = () => {
       <Button colorScheme="blue" mt="8" width="full" as={RouterLink} to="/">
         Back to Login
       </Button>
+
+      {/* New button for update */}
+      {ipcRenderer && (
+        <Button id="ready" mt="4" width="full" onClick={handleQuitAndInstall} variant="outline">
+          No updates ready
+        </Button>
+      )}
 
       {/* Scrollable list of posts */}
       <Box mt="8" maxHeight="400px" overflowY="auto">
